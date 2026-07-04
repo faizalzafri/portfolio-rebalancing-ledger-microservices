@@ -1,9 +1,10 @@
 package com.example.projects.stockdbservice.controller;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import com.example.projects.stockdbservice.model.Quote;
+import com.example.projects.stockdbservice.model.Quotes;
+import com.example.projects.stockdbservice.model.Transaction;
+import com.example.projects.stockdbservice.repository.QuoteRepository;
+import com.example.projects.stockdbservice.service.TransactionService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,46 +12,67 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.example.projects.stockdbservice.model.Quote;
-import com.example.projects.stockdbservice.model.Quotes;
-import com.example.projects.stockdbservice.repository.QuoteRepository;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/rest/db")
 public class DbServiceController {
 
-	@Autowired
-	private QuoteRepository quoteRepository;
+    private final QuoteRepository quoteRepository;
+    private final TransactionService transactionService;
 
-	@GetMapping("/{username}")
-	public List<String> getQuotes(@PathVariable("username") String username) {
+    public DbServiceController(QuoteRepository quoteRepository, TransactionService transactionService) {
+        this.quoteRepository = quoteRepository;
+        this.transactionService = transactionService;
+    }
 
-		return getQuotesByUsername(username);
-	}
+    @GetMapping("/{username}")
+    public List<String> getQuotes(@PathVariable("username") String username) {
 
-	private List<String> getQuotesByUsername(String username) {
-		return quoteRepository.findByUsername(username)
-				.stream()
-				.map(Quote::getQuote)
-				 .collect(Collectors.toList());
-	}
+        return getQuotesByUsername(username);
+    }
 
-	@PostMapping("/add")
-	public List<String> addQuotes(@RequestBody Quotes quotes) {
+    private List<String> getQuotesByUsername(String username) {
+        return quoteRepository.findByUsername(username)
+                .stream()
+                .map(Quote::getQuote)
+                .collect(Collectors.toList());
+    }
 
-		quotes.getQuotes()
-			.stream()
-			.forEach(quote -> quoteRepository.save(new Quote(quotes.getUsername(), quote)));
-		
-		return getQuotesByUsername(quotes.getUsername());
-	}
-	
-	 @PostMapping("/delete/{username}")
-	    public List<String> delete(@PathVariable("username") final String username) {
+    @PostMapping("/add")
+    public List<String> addQuotes(@RequestBody Quotes quotes) {
 
-	        List<Quote> quotes = quoteRepository.findByUsername(username);
-	        quoteRepository.deleteAll(quotes);
+        quotes.getQuotes()
+                .stream()
+                .forEach(quote -> quoteRepository.save(new Quote(quotes.getUsername(), quote)));
 
-	        return getQuotesByUsername(username);
-	    }
+        return getQuotesByUsername(quotes.getUsername());
+    }
+
+    @PostMapping("/delete/{username}")
+    public List<String> delete(@PathVariable("username") final String username) {
+
+        List<Quote> quotes = quoteRepository.findByUsername(username);
+        quoteRepository.deleteAll(quotes);
+
+        return getQuotesByUsername(username);
+    }
+
+    @PostMapping("/transaction/add")
+    public Transaction postTransaction(@RequestBody Transaction transactionRequest) {
+        // Set execution timestamp if not provided
+        if (transactionRequest.getTimestamp() == null) {
+            transactionRequest.setTimestamp(LocalDateTime.now());
+        }
+        return transactionService.postTransaction(
+                transactionRequest.getPortfolioId(),
+                transactionRequest.getSymbol(),
+                transactionRequest.getType(),
+                transactionRequest.getQuantity(),
+                transactionRequest.getPrice(),
+                transactionRequest.getTimestamp()
+        );
+    }
 }
