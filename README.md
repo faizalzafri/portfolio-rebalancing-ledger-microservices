@@ -1,3 +1,5 @@
+[![Java CI with Maven](https://github.com/faizalzafri/spring-stock-microservices/actions/workflows/ci.yml/badge.svg)](https://github.com/faizalzafri/spring-stock-microservices/actions/workflows/ci.yml)
+
 # Spring Stock Microservices
 
 Modernized microservices application built with **Java 21 (LTS)**, **Spring Boot 3.3.0**, **Spring Cloud (2023.0.1)**, **Spring Cloud Gateway**, and **PostgreSQL**.
