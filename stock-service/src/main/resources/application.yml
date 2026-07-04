@@ -21,3 +21,19 @@ management:
     web:
       exposure:
         include: health, info
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      dbServiceCircuit:
+        registerHealthIndicator: true
+        # Monitor the last 10 requests
+        slidingWindowSize: 10
+        # If 50% or more of the last 10 requests fail, trip the circuit
+        failureRateThreshold: 50
+        # Keep the circuit OPEN for 15 seconds before trying to recover
+        waitDurationInOpenState: 15s
+        # Minimum number of calls required before calculating error rate
+        minimumNumberOfCalls: 5
+        # Send 3 test requests in HALF-OPEN state to verify service recovery
+        permittedNumberOfCallsInHalfOpenState: 3

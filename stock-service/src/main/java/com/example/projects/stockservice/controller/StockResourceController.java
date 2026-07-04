@@ -2,6 +2,7 @@ package com.example.projects.stockservice.controller;
 
 import com.example.projects.stockservice.model.Quote;
 import com.example.projects.stockservice.service.StockPriceService;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ public class StockResourceController {
 	private StockPriceService stockPriceService;
 
 	@GetMapping("/{username}")
+	@CircuitBreaker(name="dbServiceCircuit", fallbackMethod = "dbServiceFallback")
 	public List<Quote> getStock(@PathVariable("username") final String username) {
 		LOG.info("Received request to fetch stock quotes for user {}", username);
 
@@ -53,5 +55,16 @@ public class StockResourceController {
 			BigDecimal price = stockPriceService.getPrice(quoteSymbol);
 			return new Quote(quoteSymbol, price);
 		}).collect(Collectors.toList());
+	}
+
+	// called when circuit is open or db-service is down
+	public List<Quote> dbServiceFallback(@PathVariable("username") final String username, Throwable ex) {
+		LOG.error("db-service is currently unavailable! Invoking fallback for user: {}. Error details: {}", username, ex.getMessage());
+
+		// return a mock cached fallback response to keep the client functional
+		return List.of(
+				new Quote("FALLBACK-MSFT", BigDecimal.valueOf(420.59)),
+				new Quote("FALLBACK-AAPL", BigDecimal.valueOf(185.75))
+		);
 	}
 }
