@@ -1,6 +1,10 @@
 spring:
   application:
     name: stock-service
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
 
 server:
   port: 8301
@@ -37,3 +41,10 @@ resilience4j:
         minimumNumberOfCalls: 5
         # Send 3 test requests in HALF-OPEN state to verify service recovery
         permittedNumberOfCallsInHalfOpenState: 3
+      yahooFinanceCircuit:
+        registerHealthIndicator: true
+        slidingWindowSize: 5
+        failureRateThreshold: 50
+        waitDurationInOpenState: 30s
+        minimumNumberOfCalls: 3
+        permittedNumberOfCallsInHalfOpenState: 2
