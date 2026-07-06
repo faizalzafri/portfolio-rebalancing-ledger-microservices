@@ -1,7 +1,6 @@
 package com.example.projects.stockdbservice.model;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,15 +23,15 @@ public class Portfolio {
     @CollectionTable(name = "portfolio_target_allocation", joinColumns = @JoinColumn(name = "portfolio_id"))
     @MapKeyColumn(name = "asset_symbol")
     @Column(name = "target_weight")
-    private Map<String, BigDecimal> targetAllocation = new HashMap<>();
+    private Map<String, BigDecimal> targetAllocations = new HashMap<>();
 
     public Portfolio() {
     }
 
-    public Portfolio(String username, String name, Map<String, BigDecimal> targetAllocation) {
+    public Portfolio(String username, String name, Map<String, BigDecimal> targetAllocations) {
         this.username = username;
         this.name = name;
-        this.targetAllocation = targetAllocation;
+        this.targetAllocations = targetAllocations;
     }
 
     public Long getId() {
@@ -59,11 +58,11 @@ public class Portfolio {
         this.name = name;
     }
 
-    public Map<String, BigDecimal> getTargetAllocation() {
-        return targetAllocation;
+    public Map<String, BigDecimal> getTargetAllocations() {
+        return targetAllocations;
     }
 
-    public void setTargetAllocation(Map<String, BigDecimal> targetAllocation) {
-        this.targetAllocation = targetAllocation;
+    public void setTargetAllocations(Map<String, BigDecimal> targetAllocations) {
+        this.targetAllocations = targetAllocations;
     }
 }
