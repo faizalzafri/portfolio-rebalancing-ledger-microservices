@@ -5,7 +5,6 @@
 This production-grade, containerized Spring Boot microservices application serves as an automated **Portfolio Rebalancing and Tax-Loss Harvesting Engine**.
 
 ---
-
 ## 1. System Architecture
 
 The application is structured into decoupled, containerized services interacting over a secure Docker bridge network:
