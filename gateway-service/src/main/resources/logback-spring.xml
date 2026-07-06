@@ -22,7 +22,7 @@
         </rollingPolicy>
     </appender>
 
-    <logger name="com.example.projects" level="DEBUG" />
+    <logger name="com.github.faizalzafri" level="DEBUG" />
     <logger name="org.springframework" level="INFO" />
 
     <root level="INFO">

@@ -28,7 +28,7 @@
     </appender>
 
     <!-- Application specific logging level -->
-    <logger name="com.example.projects" level="DEBUG" />
+    <logger name="com.github.faizalzafri" level="DEBUG" />
     <logger name="org.springframework" level="INFO" />
 
     <!-- Root configuration -->
