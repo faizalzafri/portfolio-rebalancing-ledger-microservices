@@ -65,7 +65,7 @@ public class TransactionService {
             }
 
             BigDecimal lotRemaining = lot.getRemainingQuantity();
-            if (lotRemaining.compareTo(remainingToSell) <= 0) {
+            if (lotRemaining.compareTo(remainingToSell) >= 0) {
                 // This lot has enough shares to fully satisfy the remaining sale quantity
                 BigDecimal newRemaining = lotRemaining.subtract(remainingToSell);
                 lot.setRemainingQuantity(newRemaining);
