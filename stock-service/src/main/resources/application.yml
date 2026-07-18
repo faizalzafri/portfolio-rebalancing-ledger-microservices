@@ -48,3 +48,7 @@ resilience4j:
         waitDurationInOpenState: 30s
         minimumNumberOfCalls: 3
         permittedNumberOfCallsInHalfOpenState: 2
+
+app:
+  docs:
+    error-base-url: https://docs.faizalzafri.com/errors
