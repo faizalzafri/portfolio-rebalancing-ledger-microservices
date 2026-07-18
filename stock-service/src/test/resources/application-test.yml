@@ -1,0 +1,4 @@
+# Disable Eureka registration and registry fetches during integration tests
+eureka:
+  client:
+    enabled: false

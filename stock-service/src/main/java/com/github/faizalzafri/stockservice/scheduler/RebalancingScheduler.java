@@ -1,18 +1,14 @@
 package com.github.faizalzafri.stockservice.scheduler;
 
+import com.github.faizalzafri.stockservice.client.DbServiceClient;
 import com.github.faizalzafri.stockservice.model.PortfolioDto;
 import com.github.faizalzafri.stockservice.model.TradeSuggestionDto;
 import com.github.faizalzafri.stockservice.service.PortfolioCalculator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,7 +19,7 @@ public class RebalancingScheduler {
     private static final Logger log = LoggerFactory.getLogger(RebalancingScheduler.class);
 
     @Autowired
-    private RestTemplate restTemplate;
+    private DbServiceClient dbServiceClient;
 
     @Autowired
     private PortfolioCalculator portfolioCalculator;
@@ -34,11 +30,8 @@ public class RebalancingScheduler {
         log.info("Starting background portfolio rebalancing and tax-loss harvesting analysis...");
 
         try {
-            // 1. Retrieve all portfolios from db-service
-            ResponseEntity<List<PortfolioDto>> portfoliosResponse = restTemplate.exchange(
-                    "http://db-service/rest/db/portfolio/all",
-                    HttpMethod.GET, null, new ParameterizedTypeReference<List<PortfolioDto>>() {});
-            List<PortfolioDto> portfolios = portfoliosResponse.getBody();
+            // 1. Retrieve all portfolios from db-service using Feign
+            List<PortfolioDto> portfolios = dbServiceClient.getAllPortfolios();
 
             if (portfolios == null || portfolios.isEmpty()) {
                 log.info("No portfolios found to analyze");
@@ -53,11 +46,8 @@ public class RebalancingScheduler {
                     continue;
                 }
 
-                // 3. Deduplicate against existing PENDING suggestions
-                ResponseEntity<List<TradeSuggestionDto>> pendingResponse = restTemplate.exchange(
-                        "http://db-service/rest/db/suggestions/pending/" + portfolio.getId(),
-                        HttpMethod.GET, null, new ParameterizedTypeReference<List<TradeSuggestionDto>>() {});
-                List<TradeSuggestionDto> pending = pendingResponse.getBody();
+                // 3. Deduplicate against existing PENDING suggestions using Feign
+                List<TradeSuggestionDto> pending = dbServiceClient.getPendingSuggestions(portfolio.getId());
                 
                 List<String> pendingKeys = pending == null ? List.of() : pending.stream()
                         .map(s -> s.getSymbol() + ":" + s.getAction())
@@ -69,11 +59,7 @@ public class RebalancingScheduler {
 
                 if (!suggestionsToSave.isEmpty()) {
                     log.info("Saving {} new trade suggestions to database...", suggestionsToSave.size());
-                    restTemplate.postForObject(
-                            "http://db-service/rest/db/suggestions/add-all",
-                            new HttpEntity<>(suggestionsToSave),
-                            List.class
-                    );
+                    dbServiceClient.saveSuggestions(suggestionsToSave);
                 }
             }
         } catch (Exception e) {

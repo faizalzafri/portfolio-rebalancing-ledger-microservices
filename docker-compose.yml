@@ -4,12 +4,13 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
+    command: redis-server --requirepass redispassword
     ports:
       - "6379:6379"
     networks:
       - stock-network
     healthcheck:
-      test: [ "CMD-SHELL", "redis-cli ping | grep PONG || exit 1" ]
+      test: [ "CMD-SHELL", "redis-cli -a redispassword ping | grep PONG || exit 1" ]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -80,6 +81,7 @@ services:
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
+      SPRING_DATA_REDIS_PASSWORD: redispassword
     depends_on:
       eureka-service:
         condition: service_healthy

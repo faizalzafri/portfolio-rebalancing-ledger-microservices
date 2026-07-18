@@ -1,5 +1,6 @@
 package com.github.faizalzafri.stockservice.controller;
 
+import com.github.faizalzafri.stockservice.client.DbServiceClient;
 import com.github.faizalzafri.stockservice.model.PortfolioDto;
 import com.github.faizalzafri.stockservice.model.TaxLotDto;
 import com.github.faizalzafri.stockservice.model.TradeSuggestionDto;
@@ -10,12 +11,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -29,7 +26,7 @@ public class PortfolioController {
     private static final Logger log = LoggerFactory.getLogger(PortfolioController.class);
 
     @Autowired
-    private RestTemplate restTemplate;
+    private DbServiceClient dbServiceClient;
 
     @Autowired
     private PortfolioCalculator portfolioCalculator;
@@ -41,7 +38,7 @@ public class PortfolioController {
     @Operation(summary = "Create a new portfolio with target allocations")
     public PortfolioDto createPortfolio(@Valid @RequestBody PortfolioDto portfolio) {
         log.info("Request to create portfolio: {}", portfolio.getName());
-        return restTemplate.postForObject("http://db-service/rest/db/portfolio/create", portfolio, PortfolioDto.class);
+        return dbServiceClient.createPortfolio(portfolio);
     }
 
     @GetMapping("/{id}/report")
@@ -49,17 +46,14 @@ public class PortfolioController {
     public Map<String, Object> getPortfolioReport(@PathVariable("id") Long id) {
         log.info("Generating real-time report for portfolio ID: {}", id);
 
-        // Fetch Portfolio Metadata
-        PortfolioDto portfolio = restTemplate.getForObject("http://db-service/rest/db/portfolio/" + id, PortfolioDto.class);
+        // Fetch Portfolio Metadata using Feign
+        PortfolioDto portfolio = dbServiceClient.getPortfolioById(id);
         if (portfolio == null) {
             throw new IllegalArgumentException("Portfolio not found: " + id);
         }
 
-        // Fetch active tax lots
-        ResponseEntity<List<TaxLotDto>> lotsResponse = restTemplate.exchange(
-                "http://db-service/rest/db/portfolio/" + id + "/lots",
-                HttpMethod.GET, null, new ParameterizedTypeReference<List<TaxLotDto>>() {});
-        List<TaxLotDto> lots = lotsResponse.getBody();
+        // Fetch active tax lots using Feign
+        List<TaxLotDto> lots = dbServiceClient.getActiveTaxLots(id);
 
         // Calculate holding values
         Map<String, BigDecimal> assetPrices = new HashMap<>();
@@ -122,14 +116,14 @@ public class PortfolioController {
     public List<TradeSuggestionDto> triggerManualRebalance(@PathVariable("id") Long id) {
         log.info("Manually triggering rebalancing analysis for portfolio ID: {}", id);
 
-        PortfolioDto portfolio = restTemplate.getForObject("http://db-service/rest/db/portfolio/" + id, PortfolioDto.class);
+        PortfolioDto portfolio = dbServiceClient.getPortfolioById(id);
         if (portfolio == null) {
             throw new IllegalArgumentException("Portfolio not found: " + id);
         }
 
         List<TradeSuggestionDto> suggestions = portfolioCalculator.analyzePortfolio(portfolio);
         if (!suggestions.isEmpty()) {
-            restTemplate.postForObject("http://db-service/rest/db/suggestions/add-all", suggestions, List.class);
+            dbServiceClient.saveSuggestions(suggestions);
         }
         return suggestions;
     }
@@ -139,9 +133,8 @@ public class PortfolioController {
     public Map<String, Object> executeTradeSuggestion(@PathVariable("id") Long id) {
         log.info("Executing trade suggestion ID: {}", id);
 
-        // 1. Fetch trade suggestion from db-service
-        TradeSuggestionDto suggestion = restTemplate.getForObject(
-                "http://db-service/rest/db/suggestions/" + id, TradeSuggestionDto.class);
+        // 1. Fetch trade suggestion using Feign
+        TradeSuggestionDto suggestion = dbServiceClient.getSuggestionById(id);
         
         if (suggestion == null) {
             throw new IllegalArgumentException("Suggestion not found: " + id);
@@ -154,7 +147,7 @@ public class PortfolioController {
         // 2. Fetch current price of asset
         BigDecimal executionPrice = stockPriceService.getPrice(suggestion.getSymbol());
 
-        // 3. Post transaction to ledger in db-service (BUY or SELL)
+        // 3. Post transaction to ledger in db-service (BUY or SELL) using Feign
         Map<String, Object> txnRequest = new HashMap<>();
         txnRequest.put("portfolioId", suggestion.getPortfolioId());
         txnRequest.put("symbol", suggestion.getSymbol());
@@ -164,13 +157,11 @@ public class PortfolioController {
         txnRequest.put("timestamp", LocalDateTime.now().toString());
 
         log.info("Posting executed transaction to db-service ledger: {}", txnRequest);
-        Map<?, ?> txnResult = restTemplate.postForObject(
-                "http://db-service/rest/db/transaction/add", txnRequest, Map.class);
+        Map<String, Object> txnResult = dbServiceClient.postTransaction(txnRequest);
 
-        // 4. Update suggestion status to EXECUTED
+        // 4. Update suggestion status to EXECUTED using Feign
         suggestion.setStatus(TradeSuggestionDto.SuggestionStatus.EXECUTED);
-        restTemplate.postForObject(
-                "http://db-service/rest/db/suggestions/add-all", List.of(suggestion), List.class);
+        dbServiceClient.saveSuggestions(List.of(suggestion));
 
         Map<String, Object> response = new HashMap<>();
         response.put("suggestionId", id);
