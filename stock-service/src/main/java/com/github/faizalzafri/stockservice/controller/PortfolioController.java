@@ -15,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
+import jakarta.validation.Valid;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public class PortfolioController {
 
     @PostMapping("/create")
     @Operation(summary = "Create a new portfolio with target allocations")
-    public PortfolioDto createPortfolio(@RequestBody PortfolioDto portfolio) {
+    public PortfolioDto createPortfolio(@Valid @RequestBody PortfolioDto portfolio) {
         log.info("Request to create portfolio: {}", portfolio.getName());
         return restTemplate.postForObject("http://db-service/rest/db/portfolio/create", portfolio, PortfolioDto.class);
     }

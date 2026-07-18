@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -76,7 +77,7 @@ public class DbServiceController {
 
     @PostMapping("/transaction/add")
     @Operation(summary = "Post a new trade transaction (triggers FIFO tax-lot depletion on SELL)")
-    public Transaction postTransaction(@RequestBody Transaction transactionRequest) {
+    public Transaction postTransaction(@Valid @RequestBody Transaction transactionRequest) {
         // Set execution timestamp if not provided
         if (transactionRequest.getTimestamp() == null) {
             transactionRequest.setTimestamp(LocalDateTime.now());
@@ -106,7 +107,7 @@ public class DbServiceController {
 
     @PostMapping("/portfolio/create")
     @Operation(summary = "Create a new portfolio with target allocations")
-    public Portfolio createPortfolio(@RequestBody Portfolio portfolio) {
+    public Portfolio createPortfolio(@Valid @RequestBody Portfolio portfolio) {
         return portfolioRepository.save(portfolio);
     }
 
