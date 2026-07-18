@@ -18,12 +18,16 @@ spring:
   # JPA settings with auto-dialect detection
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
 
 # Eureka settings with dynamic registry environment variables
 eureka:
