@@ -52,3 +52,9 @@ resilience4j:
 app:
   docs:
     error-base-url: https://docs.faizalzafri.com/errors
+
+springdoc:
+  swagger-ui:
+    config-url: /api/stock-service/v3/api-docs/swagger-config
+    url: /api/stock-service/v3/api-docs
+
