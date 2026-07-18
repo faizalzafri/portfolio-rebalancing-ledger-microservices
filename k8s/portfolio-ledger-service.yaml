@@ -14,13 +14,13 @@ spec:
     spec:
       containers:
         - name: portfolio-ledger-service
-          image: spring-stock-microservices-portfolio-ledger-service:latest
+          image: portfolio-rebalancing-ledger-microservices-portfolio-ledger-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8300
           envFrom:
             - configMapRef:
-                name: spring-stock-config
+                name: portfolio-rebalancing-ledger-config
           env:
             - name: SPRING_DATASOURCE_USERNAME
               value: postgres

@@ -14,13 +14,13 @@ spec:
     spec:
       containers:
         - name: portfolio-rebalancing-service
-          image: spring-stock-microservices-portfolio-rebalancing-service:latest
+          image: portfolio-rebalancing-ledger-microservices-portfolio-rebalancing-service:latest
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8301
           envFrom:
             - configMapRef:
-                name: spring-stock-config
+                name: portfolio-rebalancing-ledger-config
           readinessProbe:
             httpGet:
               path: /actuator/health
