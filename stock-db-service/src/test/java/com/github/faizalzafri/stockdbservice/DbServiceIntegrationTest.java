@@ -66,7 +66,9 @@ public class DbServiceIntegrationTest {
     @Test
     public void testTransactionService_FIFO_Depletion() {
         // 1. Given: Create a test portfolio in H2
-        Portfolio portfolio = new Portfolio("faiz", "Trading Ledger Portfolio", new HashMap<>());
+        Map<String, BigDecimal> targets = new HashMap<>();
+        targets.put("MSFT", BigDecimal.ONE);
+        Portfolio portfolio = new Portfolio("faiz", "Trading Ledger Portfolio", targets);
         portfolio = portfolioRepository.save(portfolio);
         Long portfolioId = portfolio.getId();
 
@@ -112,5 +114,35 @@ public class DbServiceIntegrationTest {
         TaxLot activeLot2 = remainingLots.get(0);
         assertEquals(0, new BigDecimal("3.0").compareTo(activeLot2.getRemainingQuantity()));
         assertEquals(0, new BigDecimal("410.00").compareTo(activeLot2.getPurchasePrice())); // Verifies it was Lot 2
+    }
+
+    @Test
+    public void testJpaAuditingAndVersioning() throws InterruptedException {
+        // Given
+        Map<String, BigDecimal> targets = new HashMap<>();
+        targets.put("AAPL", new BigDecimal("1.00"));
+        Portfolio portfolio = new Portfolio("faiz", "Audit Test Portfolio", targets);
+
+        // When
+        Portfolio saved = portfolioRepository.saveAndFlush(portfolio);
+
+        // then
+        assertNotNull(saved.getCreatedAt());
+        assertNotNull(saved.getUpdatedAt());
+        assertEquals(0, saved.getVersion());
+
+        LocalDateTime firstCreatedAt = saved.getCreatedAt();
+        LocalDateTime firstUpdatedAt = saved.getUpdatedAt();
+
+        Thread.sleep(100);
+
+        // When
+        saved.setName("Audit Test Portfolio - Updated Name");
+        Portfolio updated = portfolioRepository.saveAndFlush(saved);
+
+        // then
+        assertEquals(1, updated.getVersion());
+        assertEquals(firstCreatedAt, updated.getCreatedAt()); // CreatedDate must be immutable
+        assertTrue(updated.getUpdatedAt().isAfter(firstUpdatedAt)); // LastModifiedDate must be updated
     }
 }

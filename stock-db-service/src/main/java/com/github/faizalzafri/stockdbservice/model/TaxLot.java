@@ -6,11 +6,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tax_lots")
-public class TaxLot {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class TaxLot extends BaseEntity {
 
     @Column(name = "portfolio_id", nullable = false)
     private Long portfolioId;
@@ -41,9 +37,6 @@ public class TaxLot {
         this.purchasePrice = purchasePrice;
         this.purchaseDate = purchaseDate;
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public Long getPortfolioId() { return portfolioId; }
     public void setPortfolioId(Long portfolioId) { this.portfolioId = portfolioId; }

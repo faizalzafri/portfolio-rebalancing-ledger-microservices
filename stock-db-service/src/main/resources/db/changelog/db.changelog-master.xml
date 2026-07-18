@@ -9,4 +9,9 @@
         <sqlFile path="db/changelog/changes/001-baseline-schema.sql" relativeToChangelogFile="false"/>
     </changeSet>
 
+    <changeSet id="2-add-version-and-auditing" author="faizalzafri">
+        <sqlFile path="db/changelog/changes/002-add-version-and-auditing.sql" relativeToChangelogFile="false"/>
+    </changeSet>
+
+
 </databaseChangeLog>
