@@ -44,3 +44,8 @@ management:
 app:
   docs:
     error-base-url: https://docs.faizalzafri.com/errors
+
+springdoc:
+  swagger-ui:
+    config-url: /api/db-service/v3/api-docs/swagger-config
+    url: /api/db-service/v3/api-docs

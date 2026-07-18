@@ -5,6 +5,8 @@ import com.github.faizalzafri.stockservice.model.TaxLotDto;
 import com.github.faizalzafri.stockservice.model.TradeSuggestionDto;
 import com.github.faizalzafri.stockservice.service.PortfolioCalculator;
 import com.github.faizalzafri.stockservice.service.StockPriceService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/rest/portfolio")
+@Tag(name = "Portfolio Engine API", description = "Endpoints for portfolio creation, valuation reports, manual rebalancing, and trade execution")
 public class PortfolioController {
 
     private static final Logger log = LoggerFactory.getLogger(PortfolioController.class);
@@ -34,12 +37,14 @@ public class PortfolioController {
     private StockPriceService stockPriceService;
 
     @PostMapping("/create")
+    @Operation(summary = "Create a new portfolio with target allocations")
     public PortfolioDto createPortfolio(@RequestBody PortfolioDto portfolio) {
         log.info("Request to create portfolio: {}", portfolio.getName());
         return restTemplate.postForObject("http://db-service/rest/db/portfolio/create", portfolio, PortfolioDto.class);
     }
 
     @GetMapping("/{id}/report")
+    @Operation(summary = "Generate a real-time valuation, drift, and tax-loss harvesting report")
     public Map<String, Object> getPortfolioReport(@PathVariable("id") Long id) {
         log.info("Generating real-time report for portfolio ID: {}", id);
 
@@ -112,6 +117,7 @@ public class PortfolioController {
     }
 
     @PostMapping("/{id}/rebalance")
+    @Operation(summary = "Manually trigger rebalancing calculations and save generated suggestions")
     public List<TradeSuggestionDto> triggerManualRebalance(@PathVariable("id") Long id) {
         log.info("Manually triggering rebalancing analysis for portfolio ID: {}", id);
 
@@ -128,6 +134,7 @@ public class PortfolioController {
     }
 
     @PostMapping("/suggestions/{id}/execute")
+    @Operation(summary = "Execute a trade suggestion (posts the transaction to the ledger and updates status to EXECUTED)")
     public Map<String, Object> executeTradeSuggestion(@PathVariable("id") Long id) {
         log.info("Executing trade suggestion ID: {}", id);
 
