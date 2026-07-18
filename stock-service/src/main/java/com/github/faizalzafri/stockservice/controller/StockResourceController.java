@@ -1,20 +1,17 @@
 package com.github.faizalzafri.stockservice.controller;
 
+import com.github.faizalzafri.stockservice.client.DbServiceClient;
 import com.github.faizalzafri.stockservice.model.Quote;
 import com.github.faizalzafri.stockservice.service.StockPriceService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +24,7 @@ public class StockResourceController {
 	private static final Logger LOG = LoggerFactory.getLogger(StockResourceController.class);
 
 	@Autowired
-	private RestTemplate restTemplate;
+	private DbServiceClient dbServiceClient;
 
 	@Autowired
 	private StockPriceService stockPriceService;
@@ -37,13 +34,9 @@ public class StockResourceController {
 	public List<Quote> getStock(@PathVariable("username") final String username) {
 		LOG.info("Received request to fetch stock quotes for user {}", username);
 
-		ResponseEntity<List<String>> quoteResponse = restTemplate.exchange(
-				"http://db-service/rest/db/" + username,
-				HttpMethod.GET,
-				null,
-				new ParameterizedTypeReference<List<String>>() {});
-
-		List<String> quotes = quoteResponse.getBody();
+		// Use Feign Client instead of RestTemplate
+		List<String> quotes = dbServiceClient.getQuotes(username);
+		
 		if (CollectionUtils.isEmpty(quotes)) {
 			LOG.info("No quotes found in db-service for user {}", username);
 			return List.of();

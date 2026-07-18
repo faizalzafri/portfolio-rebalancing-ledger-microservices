@@ -6,7 +6,8 @@ import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -15,54 +16,28 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.Random;
 
 @Service
 public class StockPriceService {
 
     private static final Logger log = LoggerFactory.getLogger(StockPriceService.class);
-    private static final String CACHE_PREFIX = "stock:price:";
     private final Random random = new Random();
     
-    // Standard RestTemplate (Non-load-balanced) for external API calls
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Autowired
+    @Qualifier("defaultRestTemplate")
+    private RestTemplate restTemplate;
+    
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
     /**
-     * Fetches price using the Cache-Aside pattern.
-     * Wrapped in the Yahoo Finance Circuit Breaker.
+     * Fetches price using Spring Cache (@Cacheable) via RedisCacheManager.
+     * On cache-miss, executes the method under the Resilience4j Circuit Breaker.
      */
+    @Cacheable(value = "stockPrices", key = "#quoteSymbol.toUpperCase()", cacheManager = "redisCacheManager")
     @CircuitBreaker(name = "yahooFinanceCircuit", fallbackMethod = "apiFallback")
     public BigDecimal getPrice(String quoteSymbol) {
-        String cacheKey = CACHE_PREFIX + quoteSymbol.toUpperCase();
-
-        // 1. Try to read from Redis Cache
-        try {
-            String cachedPriceStr = redisTemplate.opsForValue().get(cacheKey);
-            if (cachedPriceStr != null) {
-                log.info("Cache Hit for {}: ${}", quoteSymbol, cachedPriceStr);
-                return new BigDecimal(cachedPriceStr);
-            }
-        } catch (Exception e) {
-            log.warn("Redis connection failed. Proceeding directly to API. Error: {}", e.getMessage());
-        }
-
-        // 2. Cache Miss - Fetch from API
-        BigDecimal price = fetchPriceFromApi(quoteSymbol);
-
-        // 3. Populate Redis Cache for 10 minutes
-        try {
-            redisTemplate.opsForValue().set(cacheKey, price.toString(), Duration.ofMinutes(10));
-            log.info("Populated cache for {} with price ${}", quoteSymbol, price);
-        } catch (Exception e) {
-            log.warn("Failed to write to Redis cache. Error: {}", e.getMessage());
-        }
-
-        return price;
+        return fetchPriceFromApi(quoteSymbol);
     }
 
     /**
