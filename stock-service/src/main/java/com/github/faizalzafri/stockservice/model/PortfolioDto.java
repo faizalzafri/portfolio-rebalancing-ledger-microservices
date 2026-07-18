@@ -1,12 +1,17 @@
 package com.github.faizalzafri.stockservice.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.util.Map;
 
 public class PortfolioDto {
     private Long id;
+    @NotBlank(message = "Username cannot be blank")
     private String username;
+    @NotBlank(message = "Portfolio name cannot be blank")
     private String name;
+    @NotEmpty(message = "Target allocations map cannot be empty")
     private Map<String, BigDecimal> targetAllocations;
 
     public PortfolioDto() {}

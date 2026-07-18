@@ -1,6 +1,8 @@
 package com.github.faizalzafri.stockdbservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
@@ -14,15 +16,18 @@ public class Portfolio {
     private Long id;
 
     @Column(name = "username", nullable = false)
+    @NotBlank(message = "Username cannot be blank")
     private String username;
 
     @Column(name = "name", nullable = false)
+    @NotBlank(message = "Portfolio name cannot be blank")
     private String name;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "portfolio_target_allocation", joinColumns = @JoinColumn(name = "portfolio_id"))
     @MapKeyColumn(name = "asset_symbol")
     @Column(name = "target_weight")
+    @NotEmpty(message = "Target allocations map cannot be empty")
     private Map<String, BigDecimal> targetAllocations = new HashMap<>();
 
     public Portfolio() {

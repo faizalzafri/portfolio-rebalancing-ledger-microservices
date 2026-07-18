@@ -3,9 +3,12 @@ package com.github.faizalzafri.stockservice.exception;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
@@ -13,6 +16,8 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
@@ -21,6 +26,33 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Value("${app.docs.error-base-url}")
     private String errorBaseUrl;
+
+    /**
+     * Intercepts and formats validation constraints violations (Spring validation SPI).
+     */
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        
+        log.warn("Validation failed for request payload: {}", ex.getMessage());
+
+        List<String> errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.toList());
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Request validation constraints violated"
+        );
+        problemDetail.setTitle("Constraint Violation");
+        problemDetail.setType(URI.create(errorBaseUrl + "/constraint-violation"));
+        problemDetail.setProperty("errors", errors);
+        problemDetail.setProperty("timestamp", LocalDateTime.now());
+
+        return new ResponseEntity<>(problemDetail, HttpStatus.BAD_REQUEST);
+    }
 
     /**
      * Handles business validation errors (e.g. invalid arguments, missing IDs, negative numbers).

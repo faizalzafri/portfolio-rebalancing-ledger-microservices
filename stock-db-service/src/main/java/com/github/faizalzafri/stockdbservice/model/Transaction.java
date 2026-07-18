@@ -1,6 +1,9 @@
 package com.github.faizalzafri.stockdbservice.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -18,19 +21,26 @@ public class Transaction {
     private Long id;
 
     @Column(name = "portfolio_id", nullable = false)
+    @NotNull(message = "Portfolio ID cannot be null")
     private Long portfolioId;
 
     @Column(name = "symbol", nullable = false)
+    @NotBlank(message = "Stock symbol cannot be blank")
     private String symbol;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false)
+    @NotNull(message = "Transaction type cannot be null")
     private TransactionType type;
 
     @Column(name = "quantity", nullable = false, precision = 12, scale = 4)
+    @NotNull(message = "Quantity cannot be null")
+    @DecimalMin(value = "0.0001", message = "Quantity must be strictly positive")
     private BigDecimal quantity;
 
     @Column(name = "price", nullable = false, precision = 12, scale = 4)
+    @NotNull(message = "Price cannot be null")
+    @DecimalMin(value = "0.01", message = "Price must be strictly positive")
     private BigDecimal price;
 
     @Column(name = "timestamp", nullable = false)
