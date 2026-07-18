@@ -1,0 +1,34 @@
+server:
+  port: 8302
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      routes:
+        - id: portfolio-ledger-service
+          uri: lb://portfolio-ledger-service
+          predicates:
+            - Path=/api/ledger/**
+          filters:
+            - StripPrefix=2
+        - id: portfolio-rebalancing-service
+          uri: lb://portfolio-rebalancing-service
+          predicates:
+            - Path=/api/rebalancing/**
+          filters:
+            - StripPrefix=2
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

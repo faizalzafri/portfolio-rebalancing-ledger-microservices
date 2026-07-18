@@ -8,7 +8,7 @@ services:
     ports:
       - "6379:6379"
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: [ "CMD-SHELL", "redis-cli -a redispassword ping | grep PONG || exit 1" ]
       interval: 5s
@@ -27,89 +27,89 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  eureka-service:
-    build: ./eureka-service
-    container_name: eureka-service
+  discovery-server:
+    build: ./discovery-server
+    container_name: discovery-server
     ports:
       - "8761:8761"
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8761/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  db-service:
-    build: ./stock-db-service
-    container_name: db-service
+  portfolio-ledger-service:
+    build: ./portfolio-ledger-service
+    container_name: portfolio-ledger-service
     ports:
       - "8300:8300"
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/stockdbservice
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-service:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
       postgres:
         condition: service_healthy
-      eureka-service:
+      discovery-server:
         condition: service_healthy
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8300/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  stock-service:
-    build: ./stock-service
-    container_name: stock-service
+  portfolio-rebalancing-service:
+    build: ./portfolio-rebalancing-service
+    container_name: portfolio-rebalancing-service
     ports:
       - "8301:8301"
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-service:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: 6379
       SPRING_DATA_REDIS_PASSWORD: redispassword
     depends_on:
-      eureka-service:
+      discovery-server:
         condition: service_healthy
-      db-service:
+      portfolio-ledger-service:
         condition: service_healthy
       redis:
         condition: service_healthy
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8301/actuator/health || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
 
-  gateway-service:
-    build: ./gateway-service
-    container_name: gateway-service
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
     ports:
       - "8302:8302"
     environment:
-      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-service:8761/eureka/
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://discovery-server:8761/eureka/
       EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
     depends_on:
-      eureka-service:
+      discovery-server:
         condition: service_healthy
     networks:
-      - stock-network
+      - portfolio-platform-network
     healthcheck:
       test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8302/actuator/health || exit 1"]
       interval: 10s
@@ -120,5 +120,5 @@ volumes:
   postgres_data:
 
 networks:
-  stock-network:
+  portfolio-platform-network:
     driver: bridge

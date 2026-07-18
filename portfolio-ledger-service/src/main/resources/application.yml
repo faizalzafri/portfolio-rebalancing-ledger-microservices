@@ -1,0 +1,55 @@
+server:
+  port: 8300
+
+spring:
+  application:
+    name: portfolio-ledger-service
+
+  # Database settings with environment variable placeholders
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/stockdbservice}
+    username: ${SPRING_DATASOURCE_USERNAME:postgres}
+    password: ${SPRING_DATASOURCE_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 30000
+
+  # JPA settings with auto-dialect detection
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
+
+# Eureka settings with dynamic registry environment variables
+eureka:
+  client:
+    registerWithEureka: true
+    fetchRegistry: true
+    serviceUrl:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE:http://localhost:8761/eureka/}
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  docs:
+    error-base-url: https://docs.faizalzafri.com/errors
+
+springdoc:
+  swagger-ui:
+    config-url: /api/ledger/v3/api-docs/swagger-config
+    url: /api/ledger/v3/api-docs

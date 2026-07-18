@@ -20,13 +20,13 @@ jobs:
         cache: maven
         
     - name: Build Eureka Service
-      run: mvn -f eureka-service/pom.xml clean verify
+      run: mvn -f discovery-server/pom.xml clean verify
       
     - name: Build Gateway Service
-      run: mvn -f gateway-service/pom.xml clean verify
+      run: mvn -f api-gateway/pom.xml clean verify
       
     - name: Build DB Service
-      run: mvn -f stock-db-service/pom.xml clean verify
+      run: mvn -f portfolio-ledger-service/pom.xml clean verify
       
     - name: Build Stock Service
-      run: mvn -f stock-service/pom.xml clean verify
+      run: mvn -f portfolio-rebalancing-service/pom.xml clean verify

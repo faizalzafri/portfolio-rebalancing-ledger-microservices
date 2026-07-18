@@ -3,6 +3,6 @@ kind: ConfigMap
 metadata:
   name: spring-stock-config
 data:
-  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://eureka-service:8761/eureka/"
+  EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: "http://discovery-server:8761/eureka/"
   EUREKA_INSTANCE_PREFER_IP_ADDRESS: "true"
   SPRING_DATASOURCE_URL: "jdbc:postgresql://postgres:5432/stockdbservice"
