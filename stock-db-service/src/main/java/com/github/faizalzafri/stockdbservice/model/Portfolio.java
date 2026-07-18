@@ -9,11 +9,7 @@ import java.util.Map;
 
 @Entity
 @Table(name = "portfolios")
-public class Portfolio {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Portfolio extends BaseEntity {
 
     @Column(name = "username", nullable = false)
     @NotBlank(message = "Username cannot be blank")
@@ -37,14 +33,6 @@ public class Portfolio {
         this.username = username;
         this.name = name;
         this.targetAllocations = targetAllocations;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getUsername() {

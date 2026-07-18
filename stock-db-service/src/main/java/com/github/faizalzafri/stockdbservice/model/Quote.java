@@ -9,12 +9,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "quotes")
-public class Quote {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(name = "id")
-	private Long id;
+public class Quote extends BaseEntity {
 
 	@Column(name = "username")
 	private String username;
@@ -29,14 +24,6 @@ public class Quote {
 	public Quote(String username, String quote) {
 		this.username = username;
 		this.quote = quote;
-	}
-
-	public Long getId() {
-		return id;
-	}
-
-	public void setId(Long id) {
-		this.id = id;
 	}
 
 	public String getUsername() {

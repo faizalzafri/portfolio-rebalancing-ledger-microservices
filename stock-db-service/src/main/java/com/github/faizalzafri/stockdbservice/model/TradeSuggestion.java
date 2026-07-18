@@ -6,15 +6,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "trade_suggestions")
-public class TradeSuggestion {
+public class TradeSuggestion extends BaseEntity {
 
     public enum SuggestionStatus {
         PENDING, EXECUTED, CANCELLED
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "portfolio_id", nullable = false)
     private Long portfolioId;
@@ -35,24 +31,17 @@ public class TradeSuggestion {
     @Column(name = "status", nullable = false)
     private SuggestionStatus status;
 
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
     public TradeSuggestion() {}
 
     public TradeSuggestion(Long portfolioId, String symbol, String action, 
-                           BigDecimal quantity, String reason, SuggestionStatus status, LocalDateTime createdAt) {
+                           BigDecimal quantity, String reason, SuggestionStatus status) {
         this.portfolioId = portfolioId;
         this.symbol = symbol;
         this.action = action;
         this.quantity = quantity;
         this.reason = reason;
         this.status = status;
-        this.createdAt = createdAt;
     }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
     public Long getPortfolioId() { return portfolioId; }
     public void setPortfolioId(Long portfolioId) { this.portfolioId = portfolioId; }
@@ -71,7 +60,4 @@ public class TradeSuggestion {
 
     public SuggestionStatus getStatus() { return status; }
     public void setStatus(SuggestionStatus status) { this.status = status; }
-
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

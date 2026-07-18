@@ -10,15 +10,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "transactions")
-public class Transaction {
+public class Transaction extends BaseEntity {
 
     public enum TransactionType {
         BUY, SELL
     }
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
 
     @Column(name = "portfolio_id", nullable = false)
     @NotNull(message = "Portfolio ID cannot be null")
@@ -56,14 +52,6 @@ public class Transaction {
         this.quantity = quantity;
         this.price = price;
         this.timestamp = timestamp;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public Long getPortfolioId() {
